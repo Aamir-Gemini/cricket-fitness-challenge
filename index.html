@@ -1,221 +1,101 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>15-Day Cricket Fitness Challenge</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Firebase SDK v11.6.1 (module) -->
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getFirestore, doc, setDoc, getDoc, updateDoc, increment } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-
-        const firebaseConfig = {
-            apiKey: "AIzaSyAHq9IUY0OTc1SOTpzMaRTQA2OGXExSogg",
-            authDomain: "cricket-fitness-challenge.firebaseapp.com",
-            projectId: "cricket-fitness-challenge",
-            storageBucket: "cricket-fitness-challenge.firebasestorage.app",
-            messagingSenderId: "411082946216",
-            appId: "1:411082946216:web:2b3bf6423368d12d25f49d",
-            measurementId: "G-MF6Q1X7281"
-        };
-
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-
-        const visitorDoc = doc(db, "siteData", "visitorCount");
-        async function incrementVisitorCount(){
-            const docSnap = await getDoc(visitorDoc);
-            if(docSnap.exists()){
-                await updateDoc(visitorDoc, { count: increment(1) });
-            } else {
-                await setDoc(visitorDoc, { count: 1 });
-            }
-        }
-
-        async function simpleLogin(name, mobile) {
-            if(!name || !mobile){
-                alert("Naam aur mobile dalna zaroori hai");
-                return;
-            }
-            const userDoc = doc(db, "users", mobile);
-            const userSnap = await getDoc(userDoc);
-            if(!userSnap.exists()){
-                await setDoc(userDoc, {
-                    name: name,
-                    mobile: mobile,
-                    bmiUpdated: false
-                });
-            }
-            return mobile; 
-        }
-
-        async function getUserProfile(mobile){
-            const userDoc = doc(db, "users", mobile);
-            const userSnapshot = await getDoc(userDoc);
-            if(userSnapshot.exists()){
-                return userSnapshot.data();
-            }
-            return null;
-        }
-
-        async function updateProfile(mobile, details) {
-            const userDoc = doc(db, "users", mobile);
-            const userSnapshot = await getDoc(userDoc);
-            if(userSnapshot.exists()){
-                const data = userSnapshot.data();
-                if(data.bmiUpdated){
-                    alert("Profile pehle se update ho chuki hai, dobara update nahi ho sakti.");
-                    return false;
-                } else {
-                    await updateDoc(userDoc, { ...details, bmiUpdated: true });
-                    alert("Saari details successfully save ho gai hain!");
-                    return true;
-                }
-            }
-            alert("User nahi mila!");
-            return false;
-        }
-
-        window.onload = async function(){
-            await incrementVisitorCount();
-            const visitorSnap = await getDoc(visitorDoc);
-            if(visitorSnap.exists()){
-                document.getElementById('visitorCount').innerText = visitorSnap.data().count;
-            }
-
-            document.getElementById('loginForm').onsubmit = async function(e){
-                e.preventDefault();
-                const name = document.getElementById('nameInput').value.trim();
-                const mobile = document.getElementById('mobileInput').value.trim();
-                const userId = await simpleLogin(name, mobile);
-                if(userId){
-                    document.getElementById('loginSection').style.display = 'none';
-                    document.getElementById('userProfileSection').style.display = 'block';
-                    loadUserProfile(userId);
-                }
-            };
-
-            document.getElementById('profileForm').onsubmit = async function(e){
-                e.preventDefault();
-                const age = parseInt(document.getElementById('ageInput').value);
-                const weight = parseFloat(document.getElementById('weightInput').value);
-                const height = document.getElementById('heightInput').value.trim();
-                const bmiValue = parseFloat(document.getElementById('bmiInput').value);
-                const disease = document.getElementById('diseaseInput').value.trim();
-                if(isNaN(age) || isNaN(weight) || !height || isNaN(bmiValue)){
-                    alert("Tamam fields sahi bharain!");
-                    return;
-                }
-                const mobile = document.getElementById('mobileInput').value.trim();
-                await updateProfile(mobile, { age, weight, height, bmi: bmiValue, disease });
-                loadUserProfile(mobile);
-            };
-
-            // Main dashboard interactive button
-            document.getElementById('startDayBtn').onclick = function() {
-                document.getElementById('mainCourseSection').style.display = 'none';
-                document.getElementById('dayChallengeSection').style.display = 'block';
-            }
-        };
-
-        function showCourseSection() {
-            document.getElementById('userProfileSection').style.display = 'none';
-            document.getElementById('mainCourseSection').style.display = 'block';
-        }
-
-        function backToDashboard() {
-            document.getElementById('dayChallengeSection').style.display = 'none';
-            document.getElementById('mainCourseSection').style.display = 'block';
-        }
-
-        async function loadUserProfile(mobile){
-            const profile = await getUserProfile(mobile);
-            if(profile){
-                document.getElementById('userName').innerText = profile.name || '';
-                document.getElementById('userMobile').innerText = profile.mobile || '';
-                document.getElementById('userAge').innerText = profile.age || '';
-                document.getElementById('userWeight').innerText = profile.weight || '';
-                document.getElementById('userHeight').innerText = profile.height || '';
-                document.getElementById('userBMI').innerText = profile.bmi || '';
-                document.getElementById('userDisease').innerText = profile.disease || '';
-                if(profile.bmiUpdated){
-                    document.getElementById('profileUpdateSection').style.display = 'none';
-                    document.getElementById('bmiInfo').style.display = 'block';
-                    setTimeout(() => { showCourseSection(); }, 1800); // 1.8 sec message, phir agla page
-                } else {
-                    document.getElementById('profileUpdateSection').style.display = 'block';
-                    document.getElementById('bmiInfo').style.display = 'none';
-                    document.getElementById('mainCourseSection').style.display = 'none';
-                }
-                document.getElementById('dayChallengeSection').style.display = 'none';
-            }
-        }
-    </script>
+    <meta charset="UTF-8">
+    <title>Cricket Fitness Challenge</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.tailwindcss.com" rel="stylesheet">
 </head>
-<body class="bg-gray-50 p-6">
-
-    <!-- Visitor counter ticker -->
-    <div class="mb-4 p-2 bg-white rounded shadow text-center">
-        Website Visitors: <span id="visitorCount">Loading...</span>
-    </div>
-
-    <!-- Login Section -->
-    <div id="loginSection" class="max-w-md mx-auto bg-white p-6 rounded shadow">
-        <h2 class="text-lg font-semibold mb-4">Login karo apna naam aur mobile daal kar</h2>
-        <form id="loginForm">
-            <input id="nameInput" type="text" placeholder="Naam" required class="w-full p-2 mb-3 border rounded" />
-            <input id="mobileInput" type="tel" placeholder="Mobile Number" required class="w-full p-2 mb-3 border rounded" />
-            <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700">Login</button>
+<body>
+    <!-- Simple Login Panel Start -->
+    <div id="loginPanel" class="max-w-sm mx-auto bg-white p-6 mt-12 rounded shadow">
+        <h2 class="text-lg font-semibold mb-4">Student Login</h2>
+        <form id="studentLoginForm">
+            <input id="studentName" type="text" required pattern=".{3,}" placeholder="Full Name please" class="w-full p-2 mb-3 border rounded" />
+            <input id="studentMobile" type="text" required pattern="\+92-\d{3}-\d{7}" placeholder="Mobile# (+92-XXX-XXXXXXX)" class="w-full p-2 mb-3 border rounded" />
+            <button type="submit" class="w-full bg-blue-700 text-white py-2 rounded hover:bg-blue-800">Next</button>
         </form>
-    </div>
-
-    <!-- User Profile Section -->
-    <div id="userProfileSection" class="max-w-md mx-auto bg-white p-6 rounded shadow hidden">
-        <h3 class="text-xl font-semibold mb-3">Welcome, <span id="userName"></span></h3>
-        <p>Mobile: <span id="userMobile"></span></p>
-        <p>Age: <span id="userAge"></span></p>
-        <p>Weight (kg): <span id="userWeight"></span></p>
-        <p>Height: <span id="userHeight"></span></p>
-        <p>BMI: <span id="userBMI"></span></p>
-        <p>Disease/Medical: <span id="userDisease"></span></p>
-
-        <div id="profileUpdateSection" class="mt-4">
-            <h4 class="mb-2">Apni details sirf pehli martaba bharen</h4>
-            <form id="profileForm">
-                <input id="ageInput" type="number" min="5" max="100" placeholder="Age (Saalein)" required class="w-full p-2 mb-3 border rounded" />
-                <input id="weightInput" type="number" min="20" max="250" placeholder="Weight (Kg)" required class="w-full p-2 mb-3 border rounded" />
-                <input id="heightInput" type="text" placeholder="Height (jaise: 5ft 8in ya cm)" required class="w-full p-2 mb-3 border rounded" />
-                <input id="bmiInput" type="number" step="0.01" placeholder="Calculated BMI" required class="w-full p-2 mb-3 border rounded" />
-                <input id="diseaseInput" type="text" placeholder="Koi disease/medical problem hai? (optional)" class="w-full p-2 mb-3 border rounded" />
-                <button type="submit" class="w-full bg-green-600 text-white py-2 rounded hover:bg-green-700">Save Details</button>
-            </form>
-        </div>
-        <div id="bmiInfo" class="mt-4 hidden p-2 bg-green-100 text-green-700 rounded">
-            Aap ne apni sari details update kar di hain. Dobara update nahi ho sakta.
+        <div id="loginError" class="mt-3 text-red-700 text-sm hidden">
+            Please enter a valid name (min 3 letters) and mobile number (format +92-XXX-XXXXXXX).
         </div>
     </div>
+    <!-- Simple Login Panel End -->
 
-    <!-- Fitness Challenge Main/Dashboard Section -->
-    <div id="mainCourseSection" class="max-w-md mx-auto bg-white p-6 rounded shadow hidden">
-        <h2 class="text-lg font-semibold mb-4">Cricket Fitness Challenge Details</h2>
-        <p class="mb-2">Yahan aap apna fitness challenge, daily course schedule, attendance aur progress tracker dekhenge.</p>
-        <div class="mb-2 p-2 bg-yellow-100 rounded">Sample Challenge<br>
-            Day 1: Warm up<br>
-            Day 2: Cardio<br>
-            Day 3: Strength<br>
-            Day 4: Fast running<br>
-            ...
-            Total 15 Days activities dikhne ke liye agle version mein course schedule, attendance tracking, aur challenge history add kar sakte hain!
+    <!-- Main App Wrapper (insert your full original code here) -->
+    <div id="mainApp" style="display:none;">
+        <!--
+            Paste your complete main app code below this line!
+            For example:
+        -->
+
+        <h1 class="text-xl font-semibold mb-4">15-Day Cricket Fitness Challenge</h1>
+        <p>Daily Workout</p>
+        <h2 class="text-lg font-semibold mt-3">15-Day Full Schedule</h2>
+        <p>Designed for <b>explosive power and endurance</b> needed for competitive cricket. Use this to look ahead and prepare.</p>
+        <!-- Sample schedule, stats, progress, attendance, focus breakdown... -->
+        <table class="w-full my-3 border">
+            <thead>
+                <tr class="bg-gray-200"><th>Day</th><th>Name</th><th>Focus Area</th><th>Workout</th></tr>
+            </thead>
+            <tbody>
+                <tr><td>1</td><td>Warm-up</td><td>Explosive Power</td><td>Dynamic movements, stretching</td></tr>
+                <tr><td>2</td><td>Cardio</td><td>Endurance</td><td>Running drills</td></tr>
+                <tr><td>3</td><td>Strength</td><td>Core Rotation</td><td>Med Ball Throws</td></tr>
+                <tr><td>4</td><td>Speed</td><td>Explosive Power</td><td>Sprints, agility ladder</td></tr>
+                <!-- ...continue full schedule... -->
+            </tbody>
+        </table>
+        <h2 class="mt-8 font-semibold">Progress & Stats</h2>
+        <p>Your measurable progress and challenge overview. <b>Consistency is key!</b></p>
+        <h3 class="font-semibold mt-2">Weight & BMI Progress</h3>
+        <table class="w-full mt-2 border">
+            <thead>
+                <tr class="bg-gray-200"><th>Metric</th><th>Initial</th><th>Target</th><th>Current/Final</th></tr>
+            </thead>
+            <tbody>
+                <tr><td>Weight (kg)</td><td>--</td><td>N/A</td><td>--</td></tr>
+            </tbody>
+        </table>
+        <h3 class="mt-4 font-semibold">Challenge Focus Breakdown</h3>
+        <ul class="list-disc ml-6">
+            <li>Explosive Power (Legs): Max Vertical Jump Height</li>
+            <li>Core Rotation: Med Ball Throw Distance</li>
+            <li>Endurance: 3-Minute Run Distance</li>
+        </ul>
+        <h3 class="mt-6 font-semibold">Attendance Check-in (Last 5 Days)</h3>
+        <p>Daily completion status: <b>--</b></p>
+        <!-- Continue with the rest of your original app logic, stats, attendance, challenge etc. -->
+
+        <!-- Example medical disclaimer -->
+        <div class="mt-10 bg-yellow-50 p-4 border rounded">
+            <b>Medical Disclaimer:</b> Please consult a physician before starting any new exercise program.
         </div>
-        <button id="startDayBtn" class="bg-blue-600 text-white px-4 py-2 rounded mt-2 hover:bg-blue-700">Aaj ka Challenge Dekhein</button>
     </div>
 
-    <!-- Day Challenge Screen Example -->
-    <div id="dayChallengeSection" class="max-w-md mx-auto bg-white p-6 rounded shadow hidden">
-        <h3 class="text-lg font-semibold mb-2">Aaj ka Challenge</h3>
-        <p>Day 1: Warm up<br>Instructions: 5 minute stretching, 5 minute jogging.</p>
-        <button onclick="backToDashboard()" class="bg-gray-400 text-white px-4 py-2 rounded mt-2">Back</button>
-    </div>
+    <!-- Login JS logic -->
+    <script>
+    document.addEventListener("DOMContentLoaded", function(){
+        const loginPanel = document.getElementById("loginPanel");
+        const mainApp = document.getElementById("mainApp");
+        if(mainApp) mainApp.style.display = "none";
+
+        document.getElementById("studentLoginForm").onsubmit = function(e){
+            e.preventDefault();
+            let name = document.getElementById("studentName").value.trim();
+            let mobile = document.getElementById("studentMobile").value.trim();
+            let nameValid = name.length >= 3;
+            let mobileValid = /^\+92-\d{3}-\d{7}$/.test(mobile);
+
+            if(nameValid && mobileValid){
+                loginPanel.style.display = "none";
+                if(mainApp) mainApp.style.display = "block";
+                document.getElementById("loginError").style.display = "none";
+                // Optionally save login/session to localStorage or Firestore here
+            }else{
+                document.getElementById("loginError").style.display = "block";
+            }
+        };
+    });
+    </script>
 </body>
 </html>
