@@ -10,7 +10,6 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getFirestore, doc, setDoc, getDoc, updateDoc, increment } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // Tumhari api config details (kisi ko share na karo)
         const firebaseConfig = {
             apiKey: "AIzaSyAHq9IUY0OTc1SOTpzMaRTQA2OGXExSogg",
             authDomain: "cricket-fitness-challenge.firebaseapp.com",
@@ -112,10 +111,21 @@
                 await updateProfile(mobile, { age, weight, height, bmi: bmiValue, disease });
                 loadUserProfile(mobile);
             };
+
+            // Main dashboard interactive button
+            document.getElementById('startDayBtn').onclick = function() {
+                document.getElementById('mainCourseSection').style.display = 'none';
+                document.getElementById('dayChallengeSection').style.display = 'block';
+            }
         };
 
         function showCourseSection() {
             document.getElementById('userProfileSection').style.display = 'none';
+            document.getElementById('mainCourseSection').style.display = 'block';
+        }
+
+        function backToDashboard() {
+            document.getElementById('dayChallengeSection').style.display = 'none';
             document.getElementById('mainCourseSection').style.display = 'block';
         }
 
@@ -132,12 +142,13 @@
                 if(profile.bmiUpdated){
                     document.getElementById('profileUpdateSection').style.display = 'none';
                     document.getElementById('bmiInfo').style.display = 'block';
-                    setTimeout(() => { showCourseSection(); }, 1800); // 1.8 sec success msg, phir agla page
+                    setTimeout(() => { showCourseSection(); }, 1800); // 1.8 sec message, phir agla page
                 } else {
                     document.getElementById('profileUpdateSection').style.display = 'block';
                     document.getElementById('bmiInfo').style.display = 'none';
                     document.getElementById('mainCourseSection').style.display = 'none';
                 }
+                document.getElementById('dayChallengeSection').style.display = 'none';
             }
         }
     </script>
@@ -194,9 +205,17 @@
             Day 2: Cardio<br>
             Day 3: Strength<br>
             Day 4: Fast running<br>
-            ...<br>
+            ...
             Total 15 Days activities dikhne ke liye agle version mein course schedule, attendance tracking, aur challenge history add kar sakte hain!
         </div>
+        <button id="startDayBtn" class="bg-blue-600 text-white px-4 py-2 rounded mt-2 hover:bg-blue-700">Aaj ka Challenge Dekhein</button>
+    </div>
+
+    <!-- Day Challenge Screen Example -->
+    <div id="dayChallengeSection" class="max-w-md mx-auto bg-white p-6 rounded shadow hidden">
+        <h3 class="text-lg font-semibold mb-2">Aaj ka Challenge</h3>
+        <p>Day 1: Warm up<br>Instructions: 5 minute stretching, 5 minute jogging.</p>
+        <button onclick="backToDashboard()" class="bg-gray-400 text-white px-4 py-2 rounded mt-2">Back</button>
     </div>
 </body>
 </html>
