@@ -5,28 +5,25 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>15-Day Cricket Fitness Challenge</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- Firebase SDKs -->
+    <!-- Firebase SDK v11.6.1 (module) -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, setDoc, onSnapshot, collection, updateDoc, increment, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, doc, setDoc, getDoc, updateDoc, increment } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         const firebaseConfig = {
-            apiKey: "AIzaSyAHq9IUY0OTc1SOTpzMaRTQA2OGXExSogg",
+  apiKey: "AIzaSyAHq9IUY0OTc1SOTpzMaRTQA2OGXExSogg",
   authDomain: "cricket-fitness-challenge.firebaseapp.com",
   projectId: "cricket-fitness-challenge",
   storageBucket: "cricket-fitness-challenge.firebasestorage.app",
   messagingSenderId: "411082946216",
   appId: "1:411082946216:web:2b3bf6423368d12d25f49d",
   measurementId: "G-MF6Q1X7281"
-        };
+};
+ 
 
         const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
         const db = getFirestore(app);
 
-        // Visitor counter setup
         const visitorDoc = doc(db, "siteData", "visitorCount");
         async function incrementVisitorCount(){
             const docSnap = await getDoc(visitorDoc);
@@ -37,27 +34,23 @@
             }
         }
 
-        // Simple login with Name and Mobile number (login is easy)
         async function simpleLogin(name, mobile) {
             if(!name || !mobile){
-                alert("Please enter both name and mobile number");
+                alert("Naam aur mobile dalna zaroori hai");
                 return;
             }
             const userDoc = doc(db, "users", mobile);
             const userSnap = await getDoc(userDoc);
             if(!userSnap.exists()){
-                // Naya profile create karna with bmiUpdated = false
                 await setDoc(userDoc, {
                     name: name,
                     mobile: mobile,
-                    bmi: null,
                     bmiUpdated: false
                 });
             }
-            return mobile; // mobile as user id
+            return mobile; 
         }
 
-        // Get user profile data and check BMI update status
         async function getUserProfile(mobile){
             const userDoc = doc(db, "users", mobile);
             const userSnapshot = await getDoc(userDoc);
@@ -67,26 +60,25 @@
             return null;
         }
 
-        // Update BMI only once
-        async function updateBMI(mobile, bmiValue) {
+        // Update all profile (BMI + fields) only once
+        async function updateProfile(mobile, details) {
             const userDoc = doc(db, "users", mobile);
             const userSnapshot = await getDoc(userDoc);
             if(userSnapshot.exists()){
                 const data = userSnapshot.data();
                 if(data.bmiUpdated){
-                    alert("BMI already updated, cannot change again");
+                    alert("Profile pehle se update ho chuki hai, dobara update nahi ho sakti.");
                     return false;
                 } else {
-                    await updateDoc(userDoc, { bmi: bmiValue, bmiUpdated: true });
-                    alert("BMI updated successfully");
+                    await updateDoc(userDoc, { ...details, bmiUpdated: true });
+                    alert("Saari details successfully save ho gai hain!");
                     return true;
                 }
             }
-            alert("User not found");
+            alert("User nahi mila!");
             return false;
         }
 
-        // Page load actions
         window.onload = async function(){
             await incrementVisitorCount();
             const visitorSnap = await getDoc(visitorDoc);
@@ -94,7 +86,6 @@
                 document.getElementById('visitorCount').innerText = visitorSnap.data().count;
             }
 
-            // Show login form and listen for login
             document.getElementById('loginForm').onsubmit = async function(e){
                 e.preventDefault();
                 const name = document.getElementById('nameInput').value.trim();
@@ -107,32 +98,38 @@
                 }
             };
 
-            // BMI update form submission
-            document.getElementById('bmiForm').onsubmit = async function(e){
+            document.getElementById('profileForm').onsubmit = async function(e){
                 e.preventDefault();
+                const age = parseInt(document.getElementById('ageInput').value);
+                const weight = parseFloat(document.getElementById('weightInput').value);
+                const height = document.getElementById('heightInput').value.trim();
                 const bmiValue = parseFloat(document.getElementById('bmiInput').value);
-                if(isNaN(bmiValue) || bmiValue <= 0){
-                    alert("Please enter valid BMI value");
+                const disease = document.getElementById('diseaseInput').value.trim();
+                if(isNaN(age) || isNaN(weight) || !height || isNaN(bmiValue)){
+                    alert("Tamam fields sahi bharain!");
                     return;
                 }
                 const mobile = document.getElementById('mobileInput').value.trim();
-                await updateBMI(mobile, bmiValue);
+                await updateProfile(mobile, { age, weight, height, bmi: bmiValue, disease });
                 loadUserProfile(mobile);
             };
         };
 
-        // Load profile and toggle BMI update form or show status
         async function loadUserProfile(mobile){
             const profile = await getUserProfile(mobile);
             if(profile){
-                document.getElementById('userName').innerText = profile.name;
-                document.getElementById('userMobile').innerText = profile.mobile;
-                document.getElementById('userBMI').innerText = profile.bmi ? profile.bmi : 'Not updated yet';
+                document.getElementById('userName').innerText = profile.name || '';
+                document.getElementById('userMobile').innerText = profile.mobile || '';
+                document.getElementById('userAge').innerText = profile.age || '';
+                document.getElementById('userWeight').innerText = profile.weight || '';
+                document.getElementById('userHeight').innerText = profile.height || '';
+                document.getElementById('userBMI').innerText = profile.bmi || '';
+                document.getElementById('userDisease').innerText = profile.disease || '';
                 if(profile.bmiUpdated){
-                    document.getElementById('bmiUpdateSection').style.display = 'none';
+                    document.getElementById('profileUpdateSection').style.display = 'none';
                     document.getElementById('bmiInfo').style.display = 'block';
                 } else {
-                    document.getElementById('bmiUpdateSection').style.display = 'block';
+                    document.getElementById('profileUpdateSection').style.display = 'block';
                     document.getElementById('bmiInfo').style.display = 'none';
                 }
             }
@@ -160,21 +157,27 @@
     <div id="userProfileSection" class="max-w-md mx-auto bg-white p-6 rounded shadow hidden">
         <h3 class="text-xl font-semibold mb-3">Welcome, <span id="userName"></span></h3>
         <p>Mobile: <span id="userMobile"></span></p>
+        <p>Age: <span id="userAge"></span></p>
+        <p>Weight (kg): <span id="userWeight"></span></p>
+        <p>Height: <span id="userHeight"></span></p>
         <p>BMI: <span id="userBMI"></span></p>
+        <p>Disease/Medical: <span id="userDisease"></span></p>
 
-        <!-- BMI update -->
-        <div id="bmiUpdateSection" class="mt-4">
-            <h4 class="mb-2">Apna BMI pehli martaba update karo</h4>
-            <form id="bmiForm">
-                <input id="bmiInput" type="number" step="0.01" placeholder="Your BMI" required class="w-full p-2 mb-3 border rounded" />
-                <button type="submit" class="w-full bg-green-600 text-white py-2 rounded hover:bg-green-700">Update BMI</button>
+        <!-- Profile update (BMI + info) -->
+        <div id="profileUpdateSection" class="mt-4">
+            <h4 class="mb-2">Apni details sirf pehli martaba bharen</h4>
+            <form id="profileForm">
+                <input id="ageInput" type="number" min="5" max="100" placeholder="Age (Saalein)" required class="w-full p-2 mb-3 border rounded" />
+                <input id="weightInput" type="number" min="20" max="250" placeholder="Weight (Kg)" required class="w-full p-2 mb-3 border rounded" />
+                <input id="heightInput" type="text" placeholder="Height (jaise: 5ft 8in ya cm)" required class="w-full p-2 mb-3 border rounded" />
+                <input id="bmiInput" type="number" step="0.01" placeholder="Calculated BMI" required class="w-full p-2 mb-3 border rounded" />
+                <input id="diseaseInput" type="text" placeholder="Koi disease/medical problem hai? (optional)" class="w-full p-2 mb-3 border rounded" />
+                <button type="submit" class="w-full bg-green-600 text-white py-2 rounded hover:bg-green-700">Save Details</button>
             </form>
         </div>
-
         <div id="bmiInfo" class="mt-4 hidden p-2 bg-green-100 text-green-700 rounded">
-            Aap ne apna BMI update kar diya hai. Aap dobara update nahi kar sakte.
+            Aap ne apni sari details update kar di hain. Dobara update nahi ho sakta.
         </div>
     </div>
-
 </body>
 </html>
