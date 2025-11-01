@@ -8,6 +8,28 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <!-- Firebase SDKs -->
     <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+    import { getFirestore } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+    // Firebase Config (yahan apni keys paste karen)
+    const firebaseConfig = {
+      apiKey: "AIzaSyAHq9IUY0OTc1SOTpzMaRTQA2OGXExSogg",
+      authDomain: "cricket-fitness-challenge.firebaseapp.com",
+      projectId: "cricket-fitness-challenge",
+      storageBucket: "cricket-fitness-challenge.firebasestorage.app",
+      messagingSenderId: "411082946216",
+      appId: "1:411082946216:web:2b3bf6423368d12d25f49d",
+      measurementId: "G-MF6Q1X7281"
+    };
+
+    // App Initialize karna
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    // Baaki aapka Firebase aur app ka code yahan start hota hai...
+</script>
+
+    <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         // Import updateDoc and increment for the counter logic
