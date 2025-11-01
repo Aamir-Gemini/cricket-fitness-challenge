@@ -10,16 +10,16 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getFirestore, doc, setDoc, getDoc, updateDoc, increment } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
+        // Tumhari api config details (kisi ko share na karo)
         const firebaseConfig = {
-  apiKey: "AIzaSyAHq9IUY0OTc1SOTpzMaRTQA2OGXExSogg",
-  authDomain: "cricket-fitness-challenge.firebaseapp.com",
-  projectId: "cricket-fitness-challenge",
-  storageBucket: "cricket-fitness-challenge.firebasestorage.app",
-  messagingSenderId: "411082946216",
-  appId: "1:411082946216:web:2b3bf6423368d12d25f49d",
-  measurementId: "G-MF6Q1X7281"
-};
- 
+            apiKey: "AIzaSyAHq9IUY0OTc1SOTpzMaRTQA2OGXExSogg",
+            authDomain: "cricket-fitness-challenge.firebaseapp.com",
+            projectId: "cricket-fitness-challenge",
+            storageBucket: "cricket-fitness-challenge.firebasestorage.app",
+            messagingSenderId: "411082946216",
+            appId: "1:411082946216:web:2b3bf6423368d12d25f49d",
+            measurementId: "G-MF6Q1X7281"
+        };
 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
@@ -60,7 +60,6 @@
             return null;
         }
 
-        // Update all profile (BMI + fields) only once
         async function updateProfile(mobile, details) {
             const userDoc = doc(db, "users", mobile);
             const userSnapshot = await getDoc(userDoc);
@@ -115,6 +114,11 @@
             };
         };
 
+        function showCourseSection() {
+            document.getElementById('userProfileSection').style.display = 'none';
+            document.getElementById('mainCourseSection').style.display = 'block';
+        }
+
         async function loadUserProfile(mobile){
             const profile = await getUserProfile(mobile);
             if(profile){
@@ -128,9 +132,11 @@
                 if(profile.bmiUpdated){
                     document.getElementById('profileUpdateSection').style.display = 'none';
                     document.getElementById('bmiInfo').style.display = 'block';
+                    setTimeout(() => { showCourseSection(); }, 1800); // 1.8 sec success msg, phir agla page
                 } else {
                     document.getElementById('profileUpdateSection').style.display = 'block';
                     document.getElementById('bmiInfo').style.display = 'none';
+                    document.getElementById('mainCourseSection').style.display = 'none';
                 }
             }
         }
@@ -163,7 +169,6 @@
         <p>BMI: <span id="userBMI"></span></p>
         <p>Disease/Medical: <span id="userDisease"></span></p>
 
-        <!-- Profile update (BMI + info) -->
         <div id="profileUpdateSection" class="mt-4">
             <h4 class="mb-2">Apni details sirf pehli martaba bharen</h4>
             <form id="profileForm">
@@ -177,6 +182,20 @@
         </div>
         <div id="bmiInfo" class="mt-4 hidden p-2 bg-green-100 text-green-700 rounded">
             Aap ne apni sari details update kar di hain. Dobara update nahi ho sakta.
+        </div>
+    </div>
+
+    <!-- Fitness Challenge Main/Dashboard Section -->
+    <div id="mainCourseSection" class="max-w-md mx-auto bg-white p-6 rounded shadow hidden">
+        <h2 class="text-lg font-semibold mb-4">Cricket Fitness Challenge Details</h2>
+        <p class="mb-2">Yahan aap apna fitness challenge, daily course schedule, attendance aur progress tracker dekhenge.</p>
+        <div class="mb-2 p-2 bg-yellow-100 rounded">Sample Challenge<br>
+            Day 1: Warm up<br>
+            Day 2: Cardio<br>
+            Day 3: Strength<br>
+            Day 4: Fast running<br>
+            ...<br>
+            Total 15 Days activities dikhne ke liye agle version mein course schedule, attendance tracking, aur challenge history add kar sakte hain!
         </div>
     </div>
 </body>
