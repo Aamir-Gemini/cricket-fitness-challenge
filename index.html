@@ -454,26 +454,25 @@
         }
 
         async function updateFinalWeight() {
-             if (!window.dbReady || !window.userId) { console.error("Authentication or Database not ready."); return; }
-
-            const newWeight = parseFloat(document.getElementById('final-weight-input').value);
-            if (isNaN(newWeight) || newWeight <= 0) {
-                console.error("Invalid weight entered.");
-                return;
-            }
-
-            const weightRef = window.doc(window.db, `/artifacts/${window.appId}/users/${window.userId}/user_stats/final_weight`);
-            try {
-                // Only save the final weight, not the entire profile
-                await window.setDoc(weightRef, { finalWeight: newWeight, timestamp: new Date().toISOString() }, { merge: true });
-                console.log("Final weight updated successfully.");
-                document.getElementById('final-weight-input').value = '';
-                userData.finalWeight = newWeight; // Update local state immediately
-                updateStatUI(); // Refresh UI
-            } catch (error) {
-                console.error("Error updating final weight: ", error);
-            }
-        }
+  if (!window.dbReady || !window.userId) {
+    console.error('Authentication or Database not ready.');
+    return;
+  }
+  const newWeight = parseFloat(document.getElementById('final-weight-input').value);
+  if (isNaN(newWeight) || newWeight === 0) {
+    console.error('Invalid weight entered.');
+    return;
+  }
+  const weightRef = window.doc(window.db, `artifacts/${window.appId}/users/${window.userId}/userstats/finalweight`);
+  try {
+    await window.setDoc(weightRef, {finalWeight: newWeight, timestamp: new Date().toISOString()}, {merge: true});
+    document.getElementById('final-weight-input').value = '';
+    userData.finalWeight = newWeight;
+    updateStatUI(); // UI refresh
+  } catch (error) {
+    console.error('Error updating final weight:', error);
+  }
+}
 
         function updateLogButtonState(dayNumber) {
             const btn = document.getElementById('log-completion-btn');
