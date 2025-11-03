@@ -142,11 +142,7 @@
         <header class="text-center mb-6">
             <h1 class="text-3xl sm:text-4xl font-bold text-blue-800 flex justify-center items-center">
                 15-Day Cricket Fitness Challenge
-                <!-- Visitor Counter Badge -->
-                <span id="visitor-count-badge" class="ml-4 text-sm font-normal bg-red-500 text-white px-3 py-1 rounded-full shadow-md hidden">
-                    Users: 0
-                </span>
-            </h1>
+                
             <p class="text-lg text-gray-600 mt-1">Get match-ready: Explosive power, endurance, and core rotation.</p>
             <p id="auth-status" class="text-xs text-gray-500 mt-2">Connecting...</p>
         </header>
@@ -401,8 +397,7 @@
             });
         }
         
-        // NEW FUNCTION: Tracks and displays the total number of visitors
-        async function trackVisitorCount() {
+              
             if (!window.dbReady) return;
 
             const counterPath = `/artifacts/${window.appId}/public/data/visitor_count/global`;
@@ -440,23 +435,22 @@
 
 
         async function logWorkout(day) {
-            if (!window.dbReady || !window.userId) { console.error("Authentication or Database not ready."); return; }
-            
-            const dayId = day.toString();
-            const logRef = window.doc(window.db, `/artifacts/${window.appId}/users/${window.userId}/daily_log/${dayId}`);
-            
-            try {
-                await window.setDoc(logRef, {
-                    day: day,
-                    completed: true,
-                    timestamp: new Date().toISOString()
-                }, { merge: true });
-                document.getElementById('log-message').textContent = `✅ Day ${day} logged as complete! Keep it up!`;
-                updateLogButtonState(day);
-            } catch (error) {
-                console.error("Error logging workout: ", error);
-                document.getElementById('log-message').textContent = 'Error logging workout.';
-            }
+  if (!window.dbReady || !window.userId) {
+    console.error('Authentication or Database not ready.');
+    return;
+  }
+  const dayId = day.toString();
+  const logRef = window.doc(window.db, `artifacts/${window.appId}/users/${window.userId}/dailylog/${dayId}`);
+  try {
+    await window.setDoc(logRef, {day: day, completed: true, timestamp: new Date().toISOString()}, {merge: true});
+    document.getElementById('log-message').textContent = `Day ${day} logged as complete! Keep it up!`;
+    updateLogButtonState(day);
+  } catch (error) {
+    console.error('Error logging workout:', error);
+    document.getElementById('log-message').textContent = 'Error logging workout.';
+  }
+}
+
         }
 
         async function updateFinalWeight() {
