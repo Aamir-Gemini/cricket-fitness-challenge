@@ -3,651 +3,252 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>15-Day Cricket Fitness Challenge</title>
+    <title>1 Month Athletic Fitness Plan</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- Firebase SDKs -->
-    <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-    import { getFirestore } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-
-    const firebaseConfig = {
-      apiKey: "AIzaSyAHq9IUY0OTc1SOTpzMaRTQA2OGXExSogg",
-      authDomain: "cricket-fitness-challenge.firebaseapp.com",
-      projectId: "cricket-fitness-challenge",
-      storageBucket: "cricket-fitness-challenge.firebasestorage.app",
-      messagingSenderId: "411082946216",
-      appId: "1:411082946216:web:2b3bf6423368d12d25f49d",
-      measurementId: "G-MF6Q1X7281"
-    };
-
-    // App Initialize karna
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
-
-    // Baaki aapka Firebase aur app ka code yahan start hota hai...
-</script>
-
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        // Import updateDoc and increment for the counter logic
-        import { getFirestore, doc, setDoc, onSnapshot, collection, updateDoc, increment } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-        import { setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-        
-        // Firestore Debug Logging
-        setLogLevel('Debug');
-
-        // Global variables provided by the environment
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null;
-        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
-
-        let db, auth, userId;
-        window.dbReady = false;
-
-        async function initFirebase() {
-            if (!firebaseConfig) { console.error("Firebase config not available."); return; }
-            
-            const app = initializeApp(firebaseConfig);
-            db = getFirestore(app);
-            auth = getAuth(app);
-            
-            // Assign necessary objects/functions to the global window object
-            window.db = db;
-            window.auth = auth;
-            window.doc = doc; 
-            window.setDoc = setDoc;
-            window.onSnapshot = onSnapshot;
-            window.collection = collection;
-            window.updateDoc = updateDoc; // NEW: Expose updateDoc
-            window.increment = increment; // NEW: Expose increment
-            
-            // FIX: Expose appId globally
-            window.appId = appId;
-
-            try {
-                if (initialAuthToken) {
-                    await signInWithCustomToken(auth, initialAuthToken);
-                } else {
-                    await signInAnonymously(auth);
-                }
-                userId = auth.currentUser.uid;
-                window.userId = userId;
-                window.dbReady = true;
-                console.log("Firebase initialized. User ID:", userId);
-                document.dispatchEvent(new Event('db-ready'));
-            } catch (error) {
-                console.error("Firebase Auth error:", error);
-                // Fallback to anonymous sign-in if custom token fails
-                try {
-                    await signInAnonymously(auth);
-                    userId = auth.currentUser.uid;
-                    window.userId = userId;
-                    window.dbReady = true;
-                    console.log("Signed in anonymously. User ID:", userId);
-                    document.dispatchEvent(new Event('db-ready'));
-                } catch (anonError) {
-                    console.error("Anonymous sign-in failed:", anonError);
-                }
-            }
-        }
-        
-        initFirebase();
-    </script>
-    <!-- Chosen Palette: "Calm Neutral & Blue" -->
-    <!-- Application Structure Plan: Designed a task-oriented SPA with 4 tabs. Removed the registration form for simplified user access. The 'Progress & Stats' section now uses hardcoded static values (user's provided 83kg/1.80m) for initial metrics and continues to track attendance and final weight updates via Firestore. This prioritizes immediate usability over user profile management. -->
-    <!-- Visualization & Content Choices: Report Info: Static User Data (83kg/1.80m). Goal: Display metrics immediately. Viz/Method: BMI Calculation and display on 'Stats' tab, comparison table for start/final weight using static defaults. Interaction: Final weight update uses `setDoc` to Firestore. Justification: Provides quantifiable progress (BMI) and clear targets without requiring registration. | Report Info: 15-Day Plan Table. Goal: Daily task access & log attendance. Viz/Method: Dynamic cards and a 'Log Workout' button. Interaction: Button `click` updates 'daily_log' in Firestore. Justification: Core attendance tracking. | NEW: Visitor Counter uses a public Firestore document updated on page load with the `increment` function. Library: Chart.js for focus breakdown. -->
-    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
     <style>
         .chart-container {
             position: relative;
             width: 100%;
-            max-width: 450px;
-            height: 300px;
-            max-height: 40vh;
+            max-width: 500px;
             margin-left: auto;
             margin-right: auto;
+            height: 350px;
+            max-height: 400px;
         }
         @media (min-width: 640px) {
             .chart-container {
-                height: 350px;
-                max-height: 350px;
+                height: 400px;
             }
         }
-        .content-section {
+        .tab-btn.active {
+            border-bottom-color: #3b82f6;
+            color: #3b82f6;
+            font-weight: 600;
+        }
+        .tab-panel {
             display: none;
         }
-        .content-section.active {
-            display: block;
+        .tab-panel.active {
+            display: grid;
         }
-        .nav-btn {
-            @apply px-3 py-2 sm:px-4 sm:py-2 text-sm sm:text-base font-medium rounded-lg transition-colors duration-200 cursor-pointer;
+        .modal {
+            display: none;
         }
-        .nav-btn.active {
-            @apply bg-blue-600 text-white shadow-md;
-        }
-        .nav-btn:not(.active) {
-            @apply text-blue-700 hover:bg-blue-100;
-        }
-        .form-input {
-            @apply w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500;
+        .modal.active {
+            display: flex;
         }
     </style>
+    <!-- Chosen Palette: Calm Neutrals (Slate, White, Blue Accent) -->
+    <!-- Application Structure Plan: Designed as an interactive weekly planner using a tab-based navigation ('Week 1'...'Week 4') for a clear, non-linear exploration. This structure is more user-friendly than a long table. Each tab displays a responsive grid of 'Day Cards' (Mon-Sun). Clicking a card opens a modal with that day's detailed 60-min breakdown, focusing the user on one task at a time. A 'Workout Focus Distribution' doughnut chart provides a visual summary of the plan's balance, aiding in quick synthesis of the report's structure. This design prioritizes ease of navigation and focused information-on-demand over the report's original linear table. -->
+    <!-- Visualization & Content Choices: Report Info: 4-week workout table. Goal: Organize & Inform. Viz/Method: Main structure is interactive Tabs (HTML/Tailwind/JS) for Weeks 1-4, which is superior to a long table for usability. Each tab contains a responsive Card Grid (HTML/Tailwind) for days. Goal: Inform (details). Viz/Method: Daily workout details are presented in a Modal (HTML/Tailwind) to avoid clutter. Interaction: Modal is triggered by a 'View Details' button click (JS). Goal: Synthesize plan balance. Viz/Method: A Doughnut Chart (Chart.js/Canvas) visualizes the 'Monthly Workout Focus Distribution' (categorized from report's 'Workout Focus' column). Justification: This interactive, card-based, modal-driven design is mobile-friendly and allows users to explore the plan at their own pace. CONFIRMING NO SVG/Mermaid used. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
 </head>
-<body class="bg-gray-50 font-sans text-gray-800">
+<body class="bg-slate-50 font-sans text-slate-900">
 
-    <div class="container mx-auto max-w-5xl p-4 sm:p-6">
-        
-        <header class="text-center mb-6">
-            <h1 class="text-3xl sm:text-4xl font-bold text-blue-800 flex justify-center items-center">
-                15-Day Cricket Fitness Challenge
-                
-            <p class="text-lg text-gray-600 mt-1">Get match-ready: Explosive power, endurance, and core rotation.</p>
-            <p id="auth-status" class="text-xs text-gray-500 mt-2">Connecting...</p>
+    <div class="max-w-7xl mx-auto p-4 md:p-8">
+
+        <header class="text-center mb-12">
+            <h1 class="text-4xl md:text-5xl font-bold text-slate-800 mb-4">1 Month Athletic Fitness Plan</h1>
+            <p class="text-lg text-slate-600 max-w-3xl mx-auto">
+                An interactive guide to your 30-day training schedule. This plan is built on functional fitness principles to increase your core endurance, strength, muscle, and stamina.
+            </p>
         </header>
 
-        <nav class="flex justify-center space-x-2 sm:space-x-4 mb-6 bg-white p-3 rounded-xl shadow-sm border border-gray-200" id="main-nav">
-            <button class="nav-btn active" data-target="today">Today's Plan</button>
-            <button class="nav-btn" data-target="schedule">Full Schedule</button>
-            <button class="nav-btn" data-target="stats">Progress & Stats</button>
-            <button class="nav-btn" data-target="about">About</button>
-        </nav>
-
         <main>
-            <!-- Data entry form removed. The app now uses static initial metrics and immediately enables the log button. -->
+            <section id="weekly-plan" class="mb-16">
+                <h2 class="text-3xl font-bold text-center mb-8">Weekly Plan Explorer</h2>
+                <p class="text-center text-slate-600 mb-8 max-w-2xl mx-auto">
+                    Use the tabs below to navigate between the four weeks of your training plan. Click "View Details" on any day to see the full 60-minute workout breakdown.
+                </p>
 
-            <section id="today" class="content-section active">
-                <div class="bg-white p-5 sm:p-6 rounded-xl shadow-lg border border-gray-200">
-                    <div class="flex flex-col sm:flex-row justify-between sm:items-center mb-5">
-                        <h2 class="text-2xl font-semibold text-gray-800 mb-3 sm:mb-0">Daily Workout</h2>
-                        <select id="day-selector" class="form-select w-full sm:w-64 rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
-                        </select>
-                    </div>
-
-                    <div id="workout-details">
-                    </div>
-
-                    <div class="mt-6 pt-4 border-t border-gray-200">
-                        <button id="log-completion-btn" class="w-full bg-blue-600 text-white p-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors disabled:bg-gray-400" disabled>
-                            I Completed Today's Workout!
+                <div class="border-b border-gray-200 mb-8">
+                    <nav class="flex -mb-px justify-center space-x-4 md:space-x-8" aria-label="Tabs">
+                        <button class="tab-btn active text-lg py-4 px-1 border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300" data-tab="week1">
+                            Week 1
                         </button>
-                        <p id="log-message" class="text-sm text-center mt-2"></p>
+                        <button class="tab-btn text-lg py-4 px-1 border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300" data-tab="week2">
+                            Week 2
+                        </button>
+                        <button class="tab-btn text-lg py-4 px-1 border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300" data-tab="week3">
+                            Week 3
+                        </button>
+                        <button class="tab-btn text-lg py-4 px-1 border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300" data-tab="week4">
+                            Week 4
+                        </button>
+                    </nav>
+                </div>
+
+                <div id="tab-content">
+                    <div id="week1" class="tab-panel active grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    </div>
+                    <div id="week2" class="tab-panel grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    </div>
+                    <div id="week3" class="tab-panel grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    </div>
+                    <div id="week4" class="tab-panel grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                     </div>
                 </div>
             </section>
 
-            <section id="schedule" class="content-section">
-                <div class="bg-white p-5 sm:p-6 rounded-xl shadow-lg border border-gray-200">
-                    <h2 class="text-2xl font-semibold text-gray-800 mb-4">15-Day Full Schedule</h2>
-                    <p class="text-gray-600 mb-5">Designed for **explosive power and endurance** needed for competitive cricket. Use this to look ahead and prepare.</p>
-                    <div class="overflow-x-auto">
-                        <table class="min-w-full divide-y divide-gray-200">
-                            <thead class="bg-gray-100">
-                                <tr>
-                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Day</th>
-                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Name</th>
-                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Focus Area</th>
-                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Workout of the Day (WOD - 40 Mins)</th>
-                                </tr>
-                            </thead>
-                            <tbody class="bg-white divide-y divide-gray-200 text-sm" id="schedule-table-body">
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </section>
-
-            <section id="stats" class="content-section">
-                <div class="bg-white p-5 sm:p-6 rounded-xl shadow-lg border border-gray-200">
-                    <h2 class="text-2xl font-semibold text-gray-800 mb-4">Progress & Stats</h2>
-                    <p class="text-gray-600 mb-6">Your measurable progress and challenge overview. **Consistency is key to cricket performance.**</p>
-                    
-                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                        <!-- Weight/BMI Card -->
-                        <div class="bg-gray-50 p-4 rounded-lg border col-span-1 lg:col-span-2">
-                            <h3 class="text-lg font-semibold text-gray-700 mb-3 text-center">Weight & BMI Progress (Based on 83kg / 1.80m)</h3>
-                            <div class="grid grid-cols-2 gap-4 text-center border-b pb-3 mb-3">
-                                <div class="p-2 bg-blue-50 rounded-lg">
-                                    <p class="text-xs font-medium text-gray-500">Starting BMI</p>
-                                    <p id="stat-bmi" class="text-xl font-bold text-blue-700">--</p>
-                                </div>
-                                <div class="p-2 bg-green-50 rounded-lg">
-                                    <p class="text-xs font-medium text-gray-500">Total Workouts Logged</p>
-                                    <p id="stat-workouts" class="text-xl font-bold text-green-700">0</p>
-                                </div>
-                            </div>
-                            
-                            <table class="min-w-full divide-y divide-gray-200 text-sm">
-                                <thead>
-                                    <tr>
-                                        <th class="py-2 text-left text-gray-600">Metric</th>
-                                        <th class="py-2 text-center text-gray-600">Initial</th>
-                                        <th class="py-2 text-center text-gray-600">Target</th>
-                                        <th class="py-2 text-center text-gray-600">Current/Final</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr>
-                                        <td class="py-2 font-medium">Weight (kg)</td>
-                                        <td id="stat-initial-weight" class="py-2 text-center text-gray-800">--</td>
-                                        <td class="py-2 text-center text-gray-500">N/A</td>
-                                        <td id="stat-final-weight" class="py-2 text-center text-gray-800">--</td>
-                                    </tr>
-                                </tbody>
-                            </table>
-
-                            <div class="mt-4 p-3 bg-white rounded-lg border">
-                                <label for="final-weight-input" class="block text-sm font-medium text-gray-700 mb-2">Update Final Weight (kg) for Day 15</label>
-                                <div class="flex space-x-2">
-                                    <input type="number" id="final-weight-input" class="form-input flex-grow" placeholder="Enter new weight">
-                                    <button id="update-weight-btn" class="bg-purple-600 text-white px-3 rounded-md text-sm hover:bg-purple-700">Update</button>
-                                </div>
-                            </div>
-
-                        </div>
-
-                        <!-- Focus Breakdown Card -->
-                        <div class="bg-gray-50 p-4 rounded-lg border col-span-1">
-                            <h3 class="text-lg font-semibold text-gray-700 mb-3 text-center">Challenge Focus Breakdown</h3>
-                            <p class="text-sm text-gray-600 text-center mb-3">Day allocation across key cricket fitness areas.</p>
-                            <div class="chart-container">
-                                <canvas id="focusChart"></canvas>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Targets and Attendance -->
-                    <div class="mt-6 p-4 bg-gray-50 rounded-lg border">
-                        <h3 class="text-lg font-semibold text-gray-700 mb-3">Attendance and Core Targets (Cricket Focus)</h3>
-                        <p id="attendance-status" class="text-sm text-gray-600 mb-4">Daily completion status: **--**</p>
-                        
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <h4 class="font-medium text-gray-700 mb-2">Attendance Check-in (Last 5 Days)</h4>
-                                <ul id="attendance-list" class="space-y-1 text-sm"></ul>
-                            </div>
-                            <div>
-                                <h4 class="font-medium text-gray-700 mb-2">Your Cricket Fitness Goals</h4>
-                                <ul class="space-y-1 text-sm text-gray-600">
-                                    <li class="flex justify-between items-center">Explosive Power (Legs): <span class="font-semibold text-red-600">Max Vertical Jump Height</span></li>
-                                    <li class="flex justify-between items-center">Core Rotation: <span class="font-semibold text-red-600">Med Ball Throw Distance</span></li>
-                                    <li class="flex justify-between items-center">Endurance: <span class="font-semibold text-red-600">3-Minute Run Distance</span></li>
-                                </ul>
-                                <p class="text-xs italic mt-2 text-gray-500">Track these goals outside the app to measure your true cricket readiness!</p>
-                            </div>
-                        </div>
-                    </div>
-
-                </div>
-            </section>
-
-            <section id="about" class="content-section">
-                <div class="bg-white p-5 sm:p-6 rounded-xl shadow-lg border border-gray-200">
-                    <h2 class="text-2xl font-semibold text-gray-800 mb-4">About This Challenge</h2>
-                    <p class="text-gray-600 mb-6">This 15-day program is designed specifically to build the **functional strength, core stability, and endurance** needed for competitive cricket.</p>
-                    
-                    <div class="space-y-4 mb-6">
-                        <div class="p-4 bg-gray-100 rounded-lg border">
-                            <h3 class="font-semibold text-gray-700">Warm-up (8 Minutes)</h3>
-                            <p class="text-sm text-gray-600">Dynamic movements to elevate heart rate and increase blood flow.</p>
-                        </div>
-                        <div class="p-4 bg-gray-100 rounded-lg border">
-                            <h3 class="font-semibold text-gray-700">Stretching & Mobilization (7 Minutes)</h3>
-                            <p class="text-sm text-gray-600">Focus on dynamic stretching and joint mobility relevant to the day's WOD.</p>
-                        </div>
-                        <div class="p-4 bg-gray-100 rounded-lg border">
-                            <h3 class="font-semibold text-gray-700">Workout of the Day (WOD - 40 Minutes)</h3>
-                            <p class="text-sm text-gray-600">The high-intensity functional training section, using various formats (EMOM, AMRAP, Rounds for Time).</p>
-                        </div>
-                        <div class="p-4 bg-gray-100 rounded-lg border">
-                            <h3 class="font-semibold text-gray-700">Cool-down & Static Stretching (5 Minutes)</h3>
-                            <p class="text-sm text-gray-600">Static holds to reduce heart rate and improve flexibility.</p>
-                        </div>
-                    </div>
-
-                    <div class="p-4 bg-red-50 border border-red-200 rounded-lg">
-                        <h3 class="font-semibold text-red-800">Medical Disclaimer</h3>
-                        <p class="text-sm text-red-700">Participants must consult a physician before starting any new exercise program. The above plan is for general fitness and must be adapted to individual abilities and medical needs.</p>
-                    </div>
+            <section id="monthly-focus" class="bg-white rounded-lg shadow-lg p-6 md:p-8">
+                <h2 class="text-3xl font-bold text-center mb-8">Monthly Workout Focus Distribution</h2>
+                <p class="text-center text-slate-600 mb-8 max-w-2xl mx-auto">
+                    This chart provides a high-level summary of your 30-day plan, showing the distribution of workout types. This helps you visualize the balance between different training goals, based on the primary focus of each day.
+                </p>
+                <div class="chart-container">
+                    <canvas id="focusChart"></canvas>
                 </div>
             </section>
         </main>
-        
-        <footer class="text-center mt-8 text-gray-500 text-sm">
-            <p>&copy; 2025 15-Day Fitness Challenge. All Rights Reserved.</p>
-        </footer>
+
+    </div>
+
+    <div id="modal" class="modal fixed inset-0 bg-black bg-opacity-70 z-50 items-center justify-center p-4">
+        <div class="bg-white rounded-lg shadow-2xl w-full max-w-lg mx-auto" id="modal-content">
+            <div class="flex justify-between items-center p-6 border-b border-gray-200">
+                <h3 id="modal-title" class="text-2xl font-bold"></h3>
+                <button id="close-modal-btn" class="text-gray-400 hover:text-gray-600 text-3xl">&times;</button>
+            </div>
+            <div class="p-6">
+                <h4 class="font-semibold text-lg text-slate-800 mb-2">60 Minute Breakdown:</h4>
+                <div id="modal-details" class="text-slate-600 space-y-2 whitespace-pre-line"></div>
+            </div>
+        </div>
     </div>
 
     <script>
-        // Static User Data (from previous context: 83kg, 5'11" ≈ 1.80m)
-        let userData = {
-            initialWeight: 83,
-            heightM: 1.80,
-            finalWeight: 83, // Will be updated by user input or Firestore
-        };
-        let dailyLog = {}; // Stores attendance log from Firestore
+        document.addEventListener('DOMContentLoaded', () => {
+            const workoutPlan = [
+                { id: 1, week: 1, day: "Day 1", dayOfWeek: "Monday", focus: "Lower Body Endurance", details: "<strong>10 Min.</strong> Warm-up\n<strong>25 Min.</strong> Strength: Goblet Squat (3x15), Walking Lunge (3x10 per leg)\n<strong>20 Min.</strong> Core: Plank (3x60s), Russian Twist (3x20)\n<strong>5 Min.</strong> Cool-down." },
+                { id: 2, week: 1, day: "Day 2", dayOfWeek: "Tuesday", focus: "Upper Body & Cardio Endurance", details: "<strong>10 Min.</strong> Warm-up\n<strong>25 Min.</strong> Strength: Push-ups (3x Max Reps), Dumbbell Row (3x12 per arm)\n<strong>20 Min.</strong> Stamina: 15 KB Swings + 10 Burpees (EMOM for 10 Min)\n<strong>5 Min.</strong> Cool-down." },
+                { id: 3, week: 1, day: "Day 3", dayOfWeek: "Wednesday", focus: "Full Body Functional Training", details: "<strong>10 Min.</strong> Warm-up\n<strong>45 Min.</strong> WOD (AMRAP in 25 Min): 10 Box Jumps, 15 Sit-ups, 20 Air Squats, 200m Run\n<strong>5 Min.</strong> Cool-down." },
+                { id: 4, week: 1, day: "Day 4", dayOfWeek: "Thursday", focus: "Core Stability & Light Power", details: "<strong>10 Min.</strong> Warm-up\n<strong>25 Min.</strong> Power/Technique: Single-Arm Dumbbell Clean & Press (3x10 per arm)\n<strong>20 Min.</strong> Core: Hollow Hold (3x45s), Side Plank (3x45s per side)\n<strong>5 Min.</strong> Cool-down." },
+                { id: 5, week: 1, day: "Day 5", dayOfWeek: "Friday", focus: "Full Body Stamina Test - Baseline", details: "<strong>10 Min.</strong> Warm-up\n<strong>45 Min.</strong> WOD (For Time): 500m Row, 40 Air Squats, 30 Sit-ups, 20 Push-ups, 10 Pull-ups (Record time)\n<strong>5 Min.</strong> Cool-down." },
+                { id: 6, week: 1, day: "Day 6", dayOfWeek: "Saturday", focus: "High-Intensity Muscular Endurance", details: "<strong>10 Min.</strong> Warm-up\n<strong>45 Min.</strong> WOD (For Time): 3 Rounds: 15 Thrusters (Medium Weight), 15 Pull-ups, 15 Burpees\n<strong>5 Min.</strong> Cool-down." },
+                { id: 7, week: 1, day: "Day 7", dayOfWeek: "Sunday", focus: "Full Rest / Active Recovery", details: "<strong>Note:</strong> Allow the body time to recover. A light walk is acceptable." },
+                { id: 8, week: 2, day: "Day 8", dayOfWeek: "Monday", focus: "Lower Body Strength (Heavy)", details: "<strong>10 Min.</strong> Warm-up\n<strong>25 Min.</strong> Strength: Back Squat (5x5 - Heavy Weight), Leg Press (3x10)\n<strong>20 Min.</strong> Accessory: Hamstring Curl (3x12), Core: L-Sit Hold attempt\n<strong>5 Min.</strong> Cool-down." },
+                { id: 9, week: 2, day: "Day 9", dayOfWeek: "Tuesday", focus: "Upper Body (Push/Pull - Heavy)", details: "<strong>10 Min.</strong> Warm-up\n<strong>25 Min.</strong> Strength: Overhead Press (5x5), Pull-ups/Lat Pull-down (3x8-10)\n<strong>20 Min.</strong> Stamina: 10 Calorie Rowing + 10 Push Press (AMRAP for 8 Min)\n<strong>5 Min.</strong> Cool-down." },
+                { id: 10, week: 2, day: "Day 10", dayOfWeek: "Wednesday", focus: "Full Body Strength Endurance", details: "<strong>10 Min.</strong> Warm-up\n<strong>45 Min.</strong> WOD (For Time): 5 Rounds: 10 Dumbbell/KB Deadlifts (Heavy), 15 Box Step-ups (each leg), 200m Run\n<strong>5 Min.</strong> Cool-down." },
+                { id: 11, week: 2, day: "Day 11", dayOfWeek: "Thursday", focus: "Core & Explosive Power", details: "<strong>10 Min.</strong> Warm-up\n<strong>25 Min.</strong> Power: Power Clean (5x3 - Medium weight, focus on technique), Vertical Jump (3x10)\n<strong>20 Min.</strong> Core: Weighted Plank (3x45s), Ab Rollout (3x10)\n<strong>5 Min.</strong> Cool-down." },
+                { id: 12, week: 2, day: "Day 12", dayOfWeek: "Friday", focus: "Muscle Building Focus", details: "<strong>10 Min.</strong> Warm-up\n<strong>45 Min.</strong> Superset (3 Rounds): (1A) Bench Press 10, (1B) Bent-Over Row 10. (2A) Zottman Curl 12, (2B) Overhead Extension 12\n<strong>5 Min.</strong> Cool-down." },
+                { id: 13, week: 2, day: "Day 13", dayOfWeek: "Saturday", focus: "Metabolic Conditioning", details: "<strong>10 Min.</strong> Warm-up\n<strong>45 Min.</strong> Tabata (8 Rounds: 20s On, 10s Rest): Burpees, Wall Balls, Rowing, Mountain Climbers (4 minutes per station)\n<strong>5 Min.</strong> Cool-down." },
+                { id: 14, week: 2, day: "Day 14", dayOfWeek: "Sunday", focus: "Full Rest / Active Recovery", details: "<strong>Note:</strong> Sleep and water are essential for recovery." },
+                { id: 15, week: 3, day: "Day 15", dayOfWeek: "Monday", focus: "Lower Body Explosive Power", details: "<strong>10 Min.</strong> Warm-up\n<strong>25 Min.</strong> Strength/Power: Jump Squat (3x10), Snatch Balance/Overhead Squat Technique (3x5)\n<strong>20 Min.</strong> Core Endurance: Toes to Bar/Knee Raise (3x15), Medicine Ball Slams (3x15)\n<strong>5 Min.</strong> Cool-down." },
+                { id: 16, week: 3, day: "Day 16", dayOfWeek: "Tuesday", focus: "High-Intensity Upper Body", details: "<strong>10 Min.</strong> Warm-up\n<strong>25 Min.</strong> Strength: Zercher Lunge (3x10 per leg), Push Press (3x10)\n<strong>20 Min.</strong> Stamina (12 Min EMOM): Odd Min: 12 Push-ups, Even Min: 15 Calorie Bike/Row\n<strong>5 Min.</strong> Cool-down." },
+                { id: 17, week: 3, day: "Day 17", dayOfWeek: "Wednesday", focus: "Athletic Mix WOD", details: "<strong>10 Min.</strong> Warm-up\n<strong>45 Min.</strong> WOD (For Time): \"Cindy\" - 20 Min AMRAP: 5 Pull-ups, 10 Push-ups, 15 Air Squats (Record Score)\n<strong>5 Min.</strong> Cool-down." },
+                { id: 18, week: 3, day: "Day 18", dayOfWeek: "Thursday", focus: "Advanced Core & Mobility", details: "<strong>10 Min.</strong> Warm-up\n<strong>25 Min.</strong> Power: Clean and Jerk Technique (5x1-2), Heavy Farmer's Carry 3x100m\n<strong>20 Min.</strong> Core: Toes-to-Bar (3x10), AbMat Sit-ups (50 Reps)\n<strong>5 Min.</strong> Cool-down." },
+                { id: 19, week: 3, day: "Day 19", dayOfWeek: "Friday", focus: "Re-test Baseline", details: "<strong>10 Min.</strong> Warm-up\n<strong>45 Min.</strong> WOD: Re-test Day 5 (500m Row, 40 Air Squats, 30 Sit-ups, 20 Push-ups, 10 Pull-ups). Compare to previous score\n<strong>5 Min.</strong> Cool-down." },
+                { id: 20, week: 3, day: "Day 20", dayOfWeek: "Saturday", focus: "Partner WOD / Long Endurance", details: "<strong>10 Min.</strong> Warm-up\n<strong>45 Min.</strong> WOD (Chipper): 100 Burpees, 100 Box Jumps, 100 KB Swings, 100 Sit-ups (Take breaks as needed, complete as quickly as possible)\n<strong>5 Min.</strong> Cool-down." },
+                { id: 21, week: 3, day: "Day 21", dayOfWeek: "Sunday", focus: "Full Rest / Light Stretching", details: "<strong>Note:</strong> Prepare the body for the next week." },
+                { id: 22, week: 4, day: "Day 22", dayOfWeek: "Monday", focus: "Recovery Strength (Light)", details: "<strong>10 Min.</strong> Warm-up\n<strong>25 Min.</strong> Strength: Deadlift (Light weight, 3x10 - focus on perfect technique)\n<strong>20 Min.</strong> Core: Bird Dog (3x15 per side), Weighted Plank (3x30s)\n<strong>5 Min.</strong> Cool-down." },
+                { id: 23, week: 4, day: "Day 23", dayOfWeek: "Tuesday", focus: "Light Cardio & Mobility", details: "<strong>10 Min.</strong> Warm-up\n<strong>25 Min.</strong> Strength: Dumbbell Press (Light, 3x12), Ring Row/Inverted Row (3x10)\n<strong>20 Min.</strong> Stamina: 30 minutes light pace jogging/cycling (keep heart rate low)\n<strong>5 Min.</strong> Cool-down." },
+                { id: 24, week: 4, day: "Day 24", dayOfWeek: "Wednesday", focus: "Full Body Mobility", details: "<strong>10 Min.</strong> Warm-up\n<strong>45 Min.</strong> Yoga/Foam Rolling/Piriformis Stretch, Hip Flexor Mobility (Focus purely on stretching and movement for the full 45 minutes)\n<strong>5 Min.</strong> Cool-down." },
+                { id: 25, week: 4, day: "Day 25", dayOfWeek: "Thursday", focus: "Core and Technique Only", details: "<strong>10 Min.</strong> Warm-up\n<strong>25 Min.</strong> Technique: Practice Squat, Deadlift, Press with empty bar or very light weight (5x5)\n<strong>20 Min.</strong> Core: Various Plank Variations (3x1 min each)\n<strong>5 Min.</strong> Cool-down." },
+                { id: 26, week: 4, day: "Day 26", dayOfWeek: "Friday", focus: "Sport-Specific Endurance", details: "<strong>10 Min.</strong> Warm-up\n<strong>45 Min.</strong> Sport-Specific Drills (e.g., Sprints, Shuttle Runs, Cricket Throwing Drills)\n<strong>5 Min.</strong> Cool-down." },
+                { id: 27, week: 4, day: "Day 27", dayOfWeek: "Saturday", focus: "Light Metabolic Finisher", details: "<strong>10 Min.</strong> Warm-up\n<strong>45 Min.</strong> WOD (AMRAP in 15 Min): 5 Burpees, 10 Box Step-ups (No Weight), 15 Sit-ups\n<strong>5 Min.</strong> Cool-down." },
+                { id: 28, week: 4, day: "Day 28", dayOfWeek: "Sunday", focus: "Full Rest", details: "<strong>Note:</strong> Allow the body to assimilate the month of training." },
+                { id: 29, week: 4, day: "Day 29", dayOfWeek: "Monday", focus: "Repeat as Day 1", details: "<strong>10 Min.</strong> Warm-up\n<strong>25 Min.</strong> Strength: Goblet Squat (3x15)\n<strong>20 Min.</strong> Core: Plank (3x60s), Russian Twist (3x20)\n<strong>5 Min.</strong> Cool-down." },
+                { id: 30, week: 4, day: "Day 30", dayOfWeek: "Tuesday", focus: "Repeat as Day 2", details: "<strong>10 Min.</strong> Warm-up\n<strong>25 Min.</strong> Strength: Push-ups (3x Max Reps)\n<strong>20 Min.</strong> Stamina: 8 Min EMOM (10 KB Swings + 5 Burpees)\n<strong>5 Min.</strong> Cool-down." }
+            ];
 
-        function calculateBMI(weightKg, heightM) {
-            if (weightKg > 0 && heightM > 0) {
-                return (weightKg / (heightM * heightM)).toFixed(1);
-            }
-            return '--';
-        }
+            const week1Panel = document.getElementById('week1');
+            const week2Panel = document.getElementById('week2');
+            const week3Panel = document.getElementById('week3');
+            const week4Panel = document.getElementById('week4');
 
-        function updateStatUI(currentLog = {}) {
-            // Use local userData object
-            const initialWeight = userData.initialWeight || 0;
-            const finalWeight = userData.finalWeight || initialWeight;
-            const height = userData.heightM || 1;
-            
-            document.getElementById('stat-initial-weight').textContent = `${initialWeight} kg`;
-            document.getElementById('stat-final-weight').textContent = `${finalWeight} kg`;
-            document.getElementById('stat-bmi').textContent = calculateBMI(initialWeight, height);
-        }
-
-        function updateAttendanceUI() {
-            const logKeys = Object.keys(dailyLog).filter(key => dailyLog[key].completed);
-            document.getElementById('stat-workouts').textContent = logKeys.length;
-
-            const attendanceList = document.getElementById('attendance-list');
-            attendanceList.innerHTML = '';
-            
-            // Show only the last 5 logs for brevity
-            const lastFiveLogs = logKeys.slice(-5).sort((a, b) => parseInt(b) - parseInt(a)); 
-            
-            lastFiveLogs.forEach(day => {
-                const li = document.createElement('li');
-                li.className = 'flex items-center text-green-700';
-                li.innerHTML = `<span class="mr-2">✅</span> Day ${day} Completed`;
-                attendanceList.appendChild(li);
-            });
-            if (lastFiveLogs.length === 0) {
-                 attendanceList.innerHTML = '<li class="text-gray-500">No workouts logged yet.</li>';
-            }
-        }
-        
-        async function loadUserData() {
-            // Load final weight data first
-            const finalWeightRef = window.doc(window.db, `/artifacts/${window.appId}/users/${window.userId}/user_stats/final_weight`);
-            
-            window.onSnapshot(finalWeightRef, (docSnap) => {
-                if (docSnap.exists() && docSnap.data().finalWeight) {
-                    userData.finalWeight = docSnap.data().finalWeight;
-                } else {
-                    // Initialize finalWeight to initialWeight if not found
-                    userData.finalWeight = userData.initialWeight;
-                }
-                updateStatUI();
-            }, (error) => {
-                console.error("Error reading final weight:", error);
-            });
-
-            // Listen for daily log changes (Attendance)
-            const logRef = window.collection(window.db, `/artifacts/${window.appId}/users/${window.userId}/daily_log`);
-            window.onSnapshot(logRef, (snapshot) => {
-                dailyLog = {};
-                snapshot.forEach(doc => {
-                    dailyLog[doc.id] = doc.data();
-                });
-                updateAttendanceUI();
-                updateLogButtonState(parseInt(daySelector.value));
-            }, (error) => {
-                console.error("Error reading daily log:", error);
-            });
-        }
-        
-              
-            if (!window.dbReady) return;
-
-            const counterPath = `/artifacts/${window.appId}/public/data/visitor_count/global`;
-            const counterRef = window.doc(window.db, counterPath);
-            const badge = document.getElementById('visitor-count-badge');
-            
-            // 1. Increment the count on the server
-            try {
-                // Use updateDoc and increment for atomic updates
-                await window.setDoc(counterRef, { count: window.increment(1) }, { merge: true });
-            } catch (error) {
-                // If the document doesn't exist, create it and set count to 1
-                if (error.code === 'not-found' || error.message.includes('No document to update')) {
-                     await window.setDoc(counterRef, { count: 1 }, { merge: true });
-                } else {
-                    console.error("Error incrementing visitor count:", error);
-                }
-            }
-
-            // 2. Listen for the count updates in real-time
-            window.onSnapshot(counterRef, (docSnap) => {
-                if (docSnap.exists()) {
-                    const count = docSnap.data().count || 0;
-                    badge.textContent = `Users: ${count}`;
-                    badge.classList.remove('hidden');
-                } else {
-                    // This handles the first load case if the document hasn't been created yet
-                    badge.textContent = `Users: 1`;
-                    badge.classList.remove('hidden');
-                }
-            }, (error) => {
-                console.error("Error listening to visitor count:", error);
-            });
-        }
-
-
-        async function logWorkout(day) {
-  if (!window.dbReady || !window.userId) {
-    console.error('Authentication or Database not ready.');
-    return;
-  }
-  const dayId = day.toString();
-  const logRef = window.doc(window.db, `artifacts/${window.appId}/users/${window.userId}/dailylog/${dayId}`);
-  try {
-    await window.setDoc(logRef, {day: day, completed: true, timestamp: new Date().toISOString()}, {merge: true});
-    document.getElementById('log-message').textContent = `Day ${day} logged as complete! Keep it up!`;
-    updateLogButtonState(day);
-  } catch (error) {
-    console.error('Error logging workout:', error);
-    document.getElementById('log-message').textContent = 'Error logging workout.';
-  }
-}
-
-        }
-
-        async function updateFinalWeight() {
-             if (!window.dbReady || !window.userId) { console.error("Authentication or Database not ready."); return; }
-
-            const newWeight = parseFloat(document.getElementById('final-weight-input').value);
-            if (isNaN(newWeight) || newWeight <= 0) {
-                console.error("Invalid weight entered.");
-                return;
-            }
-
-            const weightRef = window.doc(window.db, `/artifacts/${window.appId}/users/${window.userId}/user_stats/final_weight`);
-            try {
-                // Only save the final weight, not the entire profile
-                await window.setDoc(weightRef, { finalWeight: newWeight, timestamp: new Date().toISOString() }, { merge: true });
-                console.log("Final weight updated successfully.");
-                document.getElementById('final-weight-input').value = '';
-                userData.finalWeight = newWeight; // Update local state immediately
-                updateStatUI(); // Refresh UI
-            } catch (error) {
-                console.error("Error updating final weight: ", error);
-            }
-        }
-
-        function updateLogButtonState(dayNumber) {
-            const btn = document.getElementById('log-completion-btn');
-            const msg = document.getElementById('log-message');
-            const dayId = dayNumber.toString();
-
-            // Registration removed, so we only check if the workout is logged
-            if (dailyLog[dayId] && dailyLog[dayId].completed) {
-                btn.disabled = true;
-                btn.textContent = `Completed! Logged on ${new Date(dailyLog[dayId].timestamp).toLocaleDateString()}`;
-                msg.textContent = "";
-            } else {
-                btn.disabled = false;
-                btn.textContent = "I Completed Today's Workout!";
-                msg.textContent = "";
-            }
-        }
-
-        // --- Challenge Data & UI Logic (Simplified) ---
-
-        const challengeData = [
-            { day: 1, name: "Monster Monday", focus: "Upper Body Power/Shoulder Durability", warmup: "2 Rounds: 1 min Jump Rope, 10 Push-ups, 10 Air Squats.", mobilization: "Arm Circles, Shoulder Rotations, Wrist Stretches.", wod: "<strong>15 Min AMRAP:</strong> 10 Burpees, 15 Push-ups, 20 Dumbbell/Object Overhead Press (Light).", cooldown: "Hold Chest & Triceps stretch, Cat-Cow stretch." },
-            { day: 2, name: "Torso Tuesday", focus: "Core Rotation & Stability", warmup: "2 Rounds: 1 min High Knees, 15 Mountain Climbers, 10 Leg Swings.", mobilization: "Spinal Twists, Hip Circles, Gate Pose.", wod: "<strong>EMOM (Every Minute On the Minute) for 20 Mins:</strong> Odd Min: 45s Side Plank Hold (30s/side); Even Min: 30 Russian Twists (fast tempo).", cooldown: "Child's Pose, Cobra Stretch, Hip Flexor stretch." },
-            { day: 3, name: "Warrior Wednesday", focus: "Explosive Legs & Plyometrics", warmup: "3 Rounds: 10 Lunges (per side), 10 Glute Bridges, 10 Calf Raises.", mobilization: "Hamstring Sweeps, Standing Calf Stretch (wall-assisted), T-Spine Rotation.", wod: "<strong>For Time (25 Min Cap):</strong> 50 Walking Lunges, 40 Single-Leg Romanian Deadlifts, 30 Box/Chair Jumps (explosive).", cooldown: "Long Static Hamstring Hold, Deep Calf Stretch." },
-            { day: 4, name: "Thrill Thursday", focus: "Upper Body Endurance (Pull)", warmup: "2 Rounds: 1 min Jumping Jacks, 10 Bent-Over Rows, 10 Good Mornings.", mobilization: "Shoulder Blade Squeezes, Lat Stretch (door frame/pole), Bicep Stretch.", wod: "<strong>4 Rounds for Time:</strong> 15 Back Rows (Dumbbell/Resistance Band), 10 T-Bar (Superman) Pulls, 15 Plank-to-Push-up.", cooldown: "Doorway Bicep Stretch, Shoulder Pinwheel." },
-            { day: 5, name: "Firepower Friday", focus: "Full Body Cricket Circuit", warmup: "Tabata Warmup (20s on/10s off): High Knees, Jumping Jacks. 4 Mins total.", mobilization: "Full Body Dynamic Mobility: Inchworms, Walkouts.", wod: "<strong>3 Rounds of 10-Minute Circuit (2 Min Rest Between):</strong> 10 Explosive Squats, 10 Dumbbell Woodchoppers (per side, Core), 10 Burpees.", cooldown: "Full Body Rollout, PNF stretching." },
-            { day: 6, name: "Smasher Saturday", focus: "Active Recovery/Mobility", warmup: "5 Mins light cardio.", mobilization: "Full 7 mins dedicated to Foam Rolling (or specific muscle release).", wod: "<strong>30 Min Zone 2 Flow:</strong> 5 Mins of Yoga/Pilates-style slow flow focusing on breath and range of motion. *(No high-impact work)*", cooldown: "Deep Meditation/Breathwork (4 Mins)." },
-            { day: 7, name: "Rest & Restore Sunday", focus: "Total Rest", warmup: "No Class", mobilization: "No Class", wod: "<strong>REST DAY:</strong> Essential for muscle recovery and growth. Encourage light walking or stretching.", cooldown: "No Class" },
-            { day: 8, name: "Power Monday", focus: "Upper Body Volume/Throwing Prep", warmup: "3 Rounds: 1 min Jump Rope, 10 Pike Push-ups, 10 Air Squats.", mobilization: "Wrist Mobility, Shoulder Girdle activation.", wod: "<strong>EMOM for 16 Mins:</strong> Min 1: Max Hand Release Push-ups; Min 2: 15 Dumbbell Bench Press (Floor Press).", cooldown: "Triceps hold, Pectoral Stretch." },
-            { day: 9, name: "Target Tuesday", focus: "Lower Body Agility & Explosiveness", warmup: "2 Rounds: 15 Lateral Lunges (per side), 20 High Knees, 10 Box Step-Ups.", mobilization: "Deep Calf Stretches, Forward Fold (Hold), Groin stretch.", wod: "<strong>\"The Leg Drive\"</strong> 3 Rounds: 20 Good Mornings, 20 Calf Raises (max effort), 15 Box Jumps/Step Ups (Fast).", cooldown: "Pigeon Pose, Butterfly Stretch." },
-            { day: 10, name: "Victory Wednesday", focus: "Full Body Endurance AMRAP", warmup: "3 Rounds: 5 Inchworms, 10 Scorpions, 10 Cat/Cow.", mobilization: "Dynamic Back and Hip Mobilization.", wod: "<strong>20 Min AMRAP:</strong> 12 Goblet Squats, 10 Russian Kettlebell Swings (Object), 8 Burpees.", cooldown: "Slow, controlled deep breathing, light static stretching." },
-            { day: 11, name: "Titan Thursday", focus: "Upper Body Shoulder Stability", warmup: "2 Rounds: 1 min Jump Rope, 10 Dumbbell Pullovers, 10 Bodyweight Rows.", mobilization: "External/Internal Shoulder Rotations, Thoracic Spine Mobility.", wod: "<strong>5 Rounds for Quality:</strong> 15 Reverse Flys, 10 Dumbbell Bicep Curls, 10 Hollow Rocks (Core Integration).", cooldown: "Wall Hang (Lat Stretch), Bicep Stretch." },
-            { day: 12, name: "Focus Friday", focus: "Core Endurance & Rotational Power", warmup: "3 Rounds: 15 Russian Twists, 10 Supermans, 1 min Hollow Hold.", mobilization: "Slow, controlled core activation: Bird-dog, Dead Bug.", wod: "<strong>\"Abdominal Ascent\"</strong> 4 Rounds of 1 Minute Per Exercise: Flutter Kicks, Bicycle Crunches, Dumbbell Torso Twists (Seated), Side Plank (30s per side).", cooldown: "Deep Abdominal and lower back release (e.g., Supported Bridge)." },
-            { day: 13, name: "Grit Saturday", focus: "Active Recovery/Mobility", warmup: "5 Mins Light cardio.", mobilization: "Full 7 mins dedicated to dynamic hip openers and spine twists.", wod: "<strong>30 Min Mobility Flow:</strong> Full Vinyasa Yoga flow, emphasizing deep holds and joint range of motion.", cooldown: "Deep Stretch & 5 Min Savasana (Relaxation)." },
-            { day: 14, name: "Zen Sunday", focus: "Total Rest", warmup: "No Class", mobilization: "No Class", wod: "<strong>REST DAY:</strong> Focus on nutrition and hydration. Prepare mentally for the final day.", cooldown: "No Class" },
-            { day: 15, name: "Finisher Friday", focus: "Benchmark WOD (Cricket Readiness Test)", warmup: "10 Min Progressive Warm-up (Focus on all major joints).", mobilization: "Dynamic stretching for all major muscle groups.", wod: "<strong>\"The 15-Day Test\"</strong> 2 Rounds For Time: 25 Burpees, 50 Box Jumps/Step-Ups, 75 Russian Twists (Fast), 100 Air Squats.", cooldown: "10 Min Comprehensive Static Stretch and Cool Down." }
-        ];
-
-        // --- UI/CHART LOGIC ---
-
-        const daySelector = document.getElementById('day-selector');
-        const workoutDetailsContainer = document.getElementById('workout-details');
-        const scheduleTableBody = document.getElementById('schedule-table-body');
-        const nav = document.getElementById('main-nav');
-        const contentSections = document.querySelectorAll('.content-section');
-        let focusChart = null;
-
-        function populateDropdown() {
-            challengeData.forEach(day => {
-                const option = document.createElement('option');
-                option.value = day.day;
-                option.textContent = `Day ${day.day}: ${day.name}`;
-                daySelector.appendChild(option);
-            });
-        }
-
-        function updateWorkoutDetails(dayNumber) {
-            const day = challengeData.find(d => d.day == dayNumber);
-            if (!day) return;
-
-            let badgeColor = 'bg-blue-100 text-blue-800';
-            if (day.focus.includes('Upper')) badgeColor = 'bg-red-100 text-red-800';
-            if (day.focus.includes('Lower')) badgeColor = 'bg-green-100 text-green-800';
-            if (day.focus.includes('Core')) badgeColor = 'bg-yellow-100 text-yellow-800';
-            if (day.focus.includes('Rest')) badgeColor = 'bg-gray-100 text-gray-800';
-            if (day.focus.includes('Recovery')) badgeColor = 'bg-purple-100 text-purple-800';
-            
-            workoutDetailsContainer.innerHTML = `
-                <h3 class="text-xl font-semibold mb-4">${day.name}</h3>
-                <span class="inline-block ${badgeColor} text-sm font-medium px-3 py-1 rounded-full mb-4">${day.focus}</span>
-                
-                <div class="space-y-4">
-                    <div class="p-4 bg-gray-50 rounded-lg border">
-                        <h4 class="font-semibold text-gray-700">Warm-up (8 Mins)</h4>
-                        <p class="text-gray-600 text-sm mt-1">${day.warmup}</p>
+            workoutPlan.forEach(day => {
+                const isRest = day.focus.toLowerCase().includes('rest');
+                const card = `
+                    <div class="bg-white rounded-lg shadow-lg p-6 flex flex-col justify-between ${isRest ? 'bg-slate-100' : ''}">
+                        <div>
+                            <div class="flex justify-between items-center mb-2">
+                                <h3 class="text-xl font-bold">${day.day}</h3>
+                                <span class="text-sm font-semibold text-slate-500">${day.dayOfWeek}</span>
+                            </div>
+                            <p class="text-slate-600 ${isRest ? 'text-slate-500' : ''}">${day.focus}</p>
+                        </div>
+                        <button class="open-modal-btn mt-6 w-full text-center bg-blue-500 text-white font-semibold py-2 px-4 rounded-lg hover:bg-blue-600 transition-colors duration-200" data-id="${day.id}">
+                            View Details
+                        </button>
                     </div>
-                    <div class="p-4 bg-gray-50 rounded-lg border">
-                        <h4 class="font-semibold text-gray-700">Stretch & Mobilization (7 Mins)</h4>
-                        <p class="text-gray-600 text-sm mt-1">${day.mobilization}</p>
-                    </div>
-                    <div class="p-4 bg-blue-50 rounded-lg border border-blue-200">
-                        <h4 class="font-semibold text-blue-800">Workout of the Day (WOD - 40 Mins)</h4>
-                        <div class="text-gray-700 text-sm mt-1">${day.wod}</div>
-                    </div>
-                    <div class="p-4 bg-gray-50 rounded-lg border">
-                        <h4 class="font-semibold text-gray-700">Cool-down (5 Mins)</h4>
-                        <p class="text-gray-600 text-sm mt-1">${day.cooldown}</p>
-                    </div>
-                </div>
-            `;
-            updateLogButtonState(dayNumber);
-        }
-
-        function populateScheduleTable() {
-            challengeData.forEach(day => {
-                const row = document.createElement('tr');
-                row.className = day.day % 2 === 0 ? 'bg-white' : 'bg-gray-50';
-                row.innerHTML = `
-                    <td class="px-4 py-3 whitespace-nowrap font-medium text-gray-900">${day.day}</td>
-                    <td class="px-4 py-3 whitespace-nowrap text-gray-600">${day.name}</td>
-                    <td class="px-4 py-3 whitespace-nowrap text-gray-600">${day.focus}</td>
-                    <td class="px-4 py-3 text-gray-600">${day.wod}</td>
                 `;
-                scheduleTableBody.appendChild(row);
-            });
-        }
-
-        function activateTab(targetId) {
-            nav.querySelectorAll('.nav-btn').forEach(btn => {
-                btn.classList.toggle('active', btn.dataset.target === targetId);
-            });
-            contentSections.forEach(section => {
-                section.classList.toggle('active', section.id === targetId);
+                if (day.week === 1) week1Panel.innerHTML += card;
+                else if (day.week === 2) week2Panel.innerHTML += card;
+                else if (day.week === 3) week3Panel.innerHTML += card;
+                else if (day.week === 4) week4Panel.innerHTML += card;
             });
 
-            if (targetId === 'stats' && !focusChart) {
-                renderFocusChart();
-            }
-        }
+            const tabs = document.querySelectorAll('.tab-btn');
+            const panels = document.querySelectorAll('.tab-panel');
 
-        function renderFocusChart() {
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    tabs.forEach(t => t.classList.remove('active'));
+                    panels.forEach(p => p.classList.remove('active'));
+
+                    tab.classList.add('active');
+                    document.getElementById(tab.dataset.tab).classList.add('active');
+                });
+            });
+
+            const modal = document.getElementById('modal');
+            const modalContent = document.getElementById('modal-content');
+            const modalTitle = document.getElementById('modal-title');
+            const modalDetails = document.getElementById('modal-details');
+            const closeModalBtn = document.getElementById('close-modal-btn');
+
+            document.querySelectorAll('.open-modal-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const dayId = parseInt(btn.dataset.id);
+                    const dayData = workoutPlan.find(d => d.id === dayId);
+                    
+                    modalTitle.textContent = `${dayData.day}: ${dayData.focus}`;
+                    modalDetails.innerHTML = dayData.details;
+                    modal.classList.add('active');
+                });
+            });
+
+            const closeModal = () => {
+                modal.classList.remove('active');
+            };
+
+            closeModalBtn.addEventListener('click', closeModal);
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    closeModal();
+                }
+            });
+
             const ctx = document.getElementById('focusChart').getContext('2d');
-            const focusCounts = challengeData.reduce((acc, day) => {
-                let area = 'Other';
-                if (day.focus.includes('Upper Body')) area = 'Upper Body';
-                else if (day.focus.includes('Core')) area = 'Core';
-                else if (day.focus.includes('Lower Body')) area = 'Lower Body';
-                else if (day.focus.includes('Full Body') || day.focus.includes('Benchmark')) area = 'Full Body';
-                else if (day.focus.includes('Active Recovery')) area = 'Active Recovery';
-                else if (day.focus.includes('Total Rest')) area = 'Rest';
-                
-                acc[area] = (acc[area] || 0) + 1;
-                return acc;
-            }, {});
+            const focusData = {
+                labels: ['Endurance', 'Strength', 'Full Body', 'Core/Power', 'Conditioning', 'Mobility', 'Core', 'Rest'],
+                datasets: [{
+                    label: 'Workout Focus (Days)',
+                    data: [9, 5, 3, 3, 3, 1, 1, 5],
+                    backgroundColor: [
+                        '#3b82f6', 
+                        '#ef4444', 
+                        '#10b981', 
+                        '#f97316', 
+                        '#eab308', 
+                        '#a855f7', 
+                        '#6366f1', 
+                        '#6b7280'
+                    ],
+                    hoverOffset: 4
+                }]
+            };
 
-            const labels = Object.keys(focusCounts);
-            const data = Object.values(focusCounts);
-
-            focusChart = new Chart(ctx, {
+            new Chart(ctx, {
                 type: 'doughnut',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        label: 'Days',
-                        data: data,
-                        backgroundColor: [
-                            'rgba(239, 68, 68, 0.7)',  
-                            'rgba(234, 179, 8, 0.7)', 
-                            'rgba(34, 197, 94, 0.7)', 
-                            'rgba(59, 130, 246, 0.7)',
-                            'rgba(168, 85, 247, 0.7)',
-                            'rgba(107, 114, 128, 0.7)',
-                        ],
-                        borderColor: [
-                            'rgba(239, 68, 68, 1)',
-                            'rgba(234, 179, 8, 1)',
-                            'rgba(34, 197, 94, 1)',
-                            'rgba(59, 130, 246, 1)',
-                            'rgba(168, 85, 247, 1)',
-                            'rgba(107, 114, 128, 1)',
-                        ],
-                        borderWidth: 1
-                    }]
-                },
+                data: focusData,
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
                     plugins: {
                         legend: {
                             position: 'bottom',
-                            labels: {
-                                padding: 15,
-                                boxWidth: 12
-                            }
                         },
                         tooltip: {
                             callbacks: {
@@ -657,7 +258,10 @@
                                         label += ': ';
                                     }
                                     if (context.parsed !== null) {
-                                        label += context.parsed + (context.parsed === 1 ? ' day' : ' days');
+                                        const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                        const value = context.parsed;
+                                        const percentage = ((value / total) * 100).toFixed(0);
+                                        label += `${value} days (${percentage}%)`;
                                     }
                                     return label;
                                 }
@@ -666,42 +270,7 @@
                     }
                 }
             });
-        }
-
-        // --- Event Listeners and Initialization ---
-
-        // Removed profile form listener
-
-        document.getElementById('log-completion-btn').addEventListener('click', () => {
-            const currentDay = parseInt(daySelector.value);
-            logWorkout(currentDay);
         });
-        document.getElementById('update-weight-btn').addEventListener('click', updateFinalWeight);
-
-        daySelector.addEventListener('change', (e) => {
-            updateWorkoutDetails(parseInt(e.target.value));
-        });
-
-        nav.addEventListener('click', (e) => {
-            if (e.target.classList.contains('nav-btn')) {
-                activateTab(e.target.dataset.target);
-            }
-        });
-
-        document.addEventListener('db-ready', () => {
-            document.getElementById('auth-status').textContent = `User ID: ${window.userId}`;
-            loadUserData();
-            trackVisitorCount(); // NEW: Call the visitor tracker on page load
-            updateStatUI(); // Initial static stats update
-            // After auth/data check, ensure the correct tab is displayed
-            activateTab('today'); 
-        });
-
-        window.onload = function() {
-            populateDropdown();
-            populateScheduleTable();
-            updateWorkoutDetails(1);
-        };
     </script>
 </body>
 </html>
